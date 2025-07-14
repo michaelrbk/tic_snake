@@ -16,6 +16,7 @@ T= CELL_SIZE
 DIR_NEW = 1
 SCORE = 0
 END = false
+NEW_FRUIT = false
 
 snake_head ={
 	x_pos=2,
@@ -31,7 +32,7 @@ fruit = {
 }
 
 function INIT()
-	math.randomseed(time())
+	new_game()
 end
 
 function TIC()
@@ -103,6 +104,22 @@ function DRAW()
 	end
 end -- DRAW
 
+function new_game()
+	SCORE = 0
+	X_DIR = 1
+	Y_DIR = 0
+	T= CELL_SIZE
+	DIR_NEW = 1
+	END = false
+	NEW_FRUIT = false
+	snake_head.x_pos = 2
+	snake_head.y_pos = 2
+	spawn_fruit()
+	snake_tail ={
+ }
+ math.randomseed(time())
+end
+
 function xgrid(val)
 	return LEFT_BORDER + (val*CELL_SIZE)
 end
@@ -124,39 +141,42 @@ function move()
 	 x_dir = -1
 	end
 	
+		-- move tail
+	move_tail()
+	
 	snake_head.x_pos = snake_head.x_pos + x_dir
 	snake_head.y_pos = snake_head.y_pos + y_dir
-	-- move tail
-	move_tail()
+	
+	-- check for tail 
+	for i=1, #snake_tail do 
+		if(snake_head.x_pos == snake_tail[i].x_pos and snake_head.y_pos == snake_tail[i].y_pos) then
+			END = true
+		end
+	end
+
 end --move
 
 function move_tail()
 
-
-end --move_tail
-
-function check_endgame()
- 
-	if(snake_head.x_pos > GRID_SIZE-1 or snake_head.x_pos < 0 ) then
-		END = true
-	end
-	if(snake_head.y_pos > GRID_SIZE-1 or snake_head.y_pos < 0 ) then
-		END = true
+	snake_part = {
+			x_pos = snake_head.x_pos,
+			y_pos = snake_head.y_pos
+		}
+	if NEW_FRUIT then
+		NEW_FRUIT = false
+		table.insert(snake_tail, 1, snake_part)
+		else
+			if #snake_tail == 0 then
+				return
+			end
+ 		table.insert(snake_tail, 1, snake_part)
+			table.remove(snake_tail)
 	end
 	
-end --check_endgame
 
-function new_game()
-	SCORE = 0
-	X_DIR = 1
-	Y_DIR = 0
-	T= CELL_SIZE
-	DIR_NEW = 1
-	END = false
-	snake_head.x_pos = 2
-	snake_head.y_pos = 2
-	spawn_fruit()
-end
+
+
+end --move_tail
 
 function spawn_fruit()
 	-- Generate random position for fruit
@@ -175,15 +195,26 @@ function check_fruit()
 		-- Snake ate the fruit, spawn a new one
 		SCORE =SCORE+1
 		-- Add a new body part to the snake_tail
-		local snake_body_part = {
+		local snake_part = {
 			x_pos = snake_head.x_pos,
 			y_pos = snake_head.y_pos
 		}
-		table.insert(snake_tail, 1, snake_body_part)
+		table.insert(snake_tail, 1, snake_part)
 		-- Spawn a new fruit
 		spawn_fruit()
 	end
 end
+
+function check_endgame()
+ 
+	if(snake_head.x_pos > GRID_SIZE-1 or snake_head.x_pos < 0) then
+		END = true
+	end
+	if(snake_head.y_pos > GRID_SIZE-1 or snake_head.y_pos < 0) then
+		END = true
+	end
+	
+end --check_endgame
 
 -- <SPRITES>
 -- 064:0000000c0000000cc00000000c00000000c0000c0c0ccc0c0cccc0ccccccc0c0
