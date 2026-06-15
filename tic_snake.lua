@@ -1,8 +1,8 @@
 -- title:   My Tic Snake
 -- author:  Michael Becker michaelrbk@gmail.com
 -- desc:    first snake version on TIC-80
--- license: MIT License (change this to your license of choice)
--- version: 0.3
+-- license: MIT License
+-- version: 0.4
 -- script:  lua
 
 -- GLOBALS
@@ -69,26 +69,24 @@ function DRAW()
 		new_game()
 	end
 
-	-- grids
+	-- grids grass
 	for _x = LEFT_BORDER, LEFT_BORDER + CELL_SIZE * GRID_SIZE - 1, CELL_SIZE do
 		for _y = TOP_BORDER, TOP_BORDER + CELL_SIZE * GRID_SIZE - 1, CELL_SIZE do
 			--rectb(_x ,_y, CELL_SIZE, CELL_SIZE, 12)
-			spr(256, _x, _y, -1, 1, 0, 0, 1, 1)
-			spr(256, _x + 7, _y + 7, -1, 1, 0, 0, 1, 1)
-			spr(256, _x, _y + 7, -1, 1, 0, 0, 1, 1)
-			spr(256, _x + 7, _y, -1, 1, 0, 0, 1, 1)
+		 --spr(256, _x, _y, -1, 2, math.random(0,1), math.random(0,1), 1, 1)
+			spr(256, _x, _y, -1, 2, 0, 0, 1, 1)
 		end
 	end
 
 	-- snake
-	rect(xgrid(snake_head.x_pos), ygrid(snake_head.y_pos), CELL_SIZE, CELL_SIZE, 12)
+	spr(257, xgrid(snake_head.x_pos), ygrid(snake_head.y_pos), -1, 2, 0, 0, 1, 1)
 
 	-- fruit
-	rect(xgrid(fruit.x_pos), ygrid(fruit.y_pos), CELL_SIZE, CELL_SIZE, 11)
+	spr(259, xgrid(fruit.x_pos), ygrid(fruit.y_pos), -15, 2, 0, 0, 1, 1)
 
 	-- snake tail
 	for i = 1, #snake_tail do
-		rect(xgrid(snake_tail[i].x_pos), ygrid(snake_tail[i].y_pos), CELL_SIZE, CELL_SIZE, 13)
+		spr(258, xgrid(snake_tail[i].x_pos), ygrid(snake_tail[i].y_pos), -1, 2, 0, 0, 1, 1)
 	end
 end -- DRAW
 
@@ -100,7 +98,7 @@ function draw_background()
 
 	-- cat
 	spr(356 + sprite, 185, 14, -1, 2, 1, 0, 2, 2)
-	print('SCORE ' .. SCORE, 3, 47, 12)
+	print('SCORE ' .. SCORE, 2, 3, 14)
 end
 
 function new_game()
@@ -214,7 +212,10 @@ function check_endgame()
 end --check_endgame
 
 -- <SPRITES>
--- 000:0006000000000000000000700000000000000000600000000070000500000000
+-- 000:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+-- 001:ffffffffff6666fff655556f655c55566555c556f655556fff6666ffffffffff
+-- 002:ffffffffff6666fff655556f6555555665555556f655556fff6666ffffffffff
+-- 003:ffff65fffff6fffff222222f222222222222222222222222f222222fff2222ff
 -- 064:0000000c0000000cc00000000c00000000c0000c0c0ccc0c0cccc0ccccccc0c0
 -- 065:c0000cc00cccc0c0c0cc0c00c0cc0c00ccccccc0c0000ccc0cccc0ccc0cc0c0c
 -- 066:0000000c0000000c000000000c00000000c0000c0c0ccc0c0cccc0ccccccc0c0
@@ -274,3 +275,4 @@ end --check_endgame
 -- <PALETTE>
 -- 000:1a1c2c5d275db14053ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE>
+
