@@ -2,7 +2,7 @@
 -- author:  Michael Becker michaelrbk@gmail.com
 -- desc:    first snake version on TIC-80
 -- license: MIT License
--- version: 0.4
+-- version: 0.5
 -- script:  lua
 
 -- GLOBALS
@@ -10,8 +10,6 @@ CELL_SIZE = 16
 GRID_SIZE = 8
 TOP_BORDER = 4
 LEFT_BORDER = 54
-X_DIR = 1
-Y_DIR = 0
 T = CELL_SIZE
 DIR_NEW = -1
 DIR = 1
@@ -24,7 +22,7 @@ snake_head = {
 	y_pos = 3
 }
 
-snake_tail = {
+snake_body = {
 }
 
 fruit = {
@@ -78,33 +76,81 @@ function DRAW()
 		end
 	end
 
-	-- snake
-	spr(257, xgrid(snake_head.x_pos), ygrid(snake_head.y_pos), -1, 2, 0, 0, 1, 1)
+	-- snake head
+	spr(257, xgrid(snake_head.x_pos), ygrid(snake_head.y_pos), -1, 2, 0, (DIR - 1) % 4, 1, 1)
 
 	-- fruit
-	spr(259, xgrid(fruit.x_pos), ygrid(fruit.y_pos), -15, 2, 0, 0, 1, 1)
+	spr(272, xgrid(fruit.x_pos), ygrid(fruit.y_pos), -15, 2, 0, 0, 1, 1)
 
-	-- snake tail
-	for i = 1, #snake_tail do
-		spr(258, xgrid(snake_tail[i].x_pos), ygrid(snake_tail[i].y_pos), -1, 2, 0, 0, 1, 1)
+	-- snake body
+	local body_len = #snake_body
+	for i = 1, body_len do
+		local seg = snake_body[i]
+		local ex_dir = seg.dir -- exit direction
+		local sid, flp, rot
+
+		if i == body_len then
+			sid = 258 -- tail tip
+			flp = 0
+			rot = (ex_dir - 1) % 4
+		else
+			local nx = snake_body[i + 1]
+			local en_dir -- entry direction
+			if nx.x_pos > seg.x_pos then en_dir = 1
+			elseif nx.x_pos < seg.x_pos then en_dir = 3
+			elseif nx.y_pos > seg.y_pos then en_dir = 2
+			else en_dir = 0 end
+
+			if (ex_dir - en_dir) % 4 == 2 then
+				sid = 259 -- straight
+				flp = 0
+				rot = (ex_dir - 1) % 4
+			elseif (ex_dir - en_dir) % 4 == 3 then
+				sid = 260 -- corner, rotating snake to right
+				flp = 0
+				rot = (ex_dir + 3) % 4
+			else
+				sid = 260 -- corner, rotating snake to left (flipped)
+				flp = 1
+			 rot = 3 - ex_dir
+			end
+		end
+
+		spr(sid, xgrid(seg.x_pos), ygrid(seg.y_pos), -1, 2, flp, rot, 1, 1)
 	end
 end -- DRAW
 
 function draw_background()
 	-- spr(id x y colorkey=-1 scale=1 flip=0 rotate=0 w=1 h=1)
-	-- pig sprintes are 64 and 66, change every half a second
+	-- sprintes are 64 and 66, change every half a second
+	
+	-- dog
 	sprite = ((math.floor(time() / 500) % 2) * 2)
-	spr(320 + sprite, 22, 14, -1, 2, 0, 0, 2, 2)
+	spr(324 + sprite, 20, 14, -1, 2, 0, 0, 2, 2)
+	
+	-- cow
+	sprite = ((math.floor(time() / 500) % 2) * 2)
+	spr(320 + sprite, 20, 52, -1, 2, 0, 0, 2, 2)
+	
+	-- pig
+	sprite = ((math.floor(time() / 500) % 2) * 2)
+	spr(352 + sprite, 20, 87, -1, 2, 0, 0, 2, 2)
 
 	-- cat
 	spr(356 + sprite, 185, 14, -1, 2, 1, 0, 2, 2)
 	print('SCORE ' .. SCORE, 2, 3, 14)
+	
+	-- rabbit
+	sprite = ((math.floor(time() / 500) % 2) * 2)
+	spr(328 + sprite, 185, 52, -1, 2, 0, 0, 2, 2)
+	
+		-- chicken
+	sprite = ((math.floor(time() / 500) % 2) * 2)
+	spr(360 + sprite, 185, 87, -1, 2, 0, 0, 2, 2)
 end
 
 function new_game()
 	SCORE = 0
-	X_DIR = 1
-	Y_DIR = 0
 	T = CELL_SIZE
 	DIR = 1
 	DIR_NEW = -1
@@ -113,7 +159,7 @@ function new_game()
 	snake_head.x_pos = 3
 	snake_head.y_pos = 3
 	spawn_fruit()
-	snake_tail = {
+	snake_body = {
 	}
 	math.randomseed(time())
 end
@@ -140,36 +186,37 @@ function move()
 		x_dir = -1
 	end
 
-	-- move tail
-	move_tail()
+	-- move body
+	move_body()
 
 	snake_head.x_pos = snake_head.x_pos + x_dir
 	snake_head.y_pos = snake_head.y_pos + y_dir
 
 	-- check for tail
-	for i = 1, #snake_tail do
-		if (snake_head.x_pos == snake_tail[i].x_pos and snake_head.y_pos == snake_tail[i].y_pos) then
+	for i = 1, #snake_body do
+		if (snake_head.x_pos == snake_body[i].x_pos and snake_head.y_pos == snake_body[i].y_pos) then
 			END = true
 		end
 	end
 end --move
 
-function move_tail()
+function move_body()
 	snake_part = {
 		x_pos = snake_head.x_pos,
-		y_pos = snake_head.y_pos
+		y_pos = snake_head.y_pos,
+		dir = DIR
 	}
 	if NEW_FRUIT then
 		NEW_FRUIT = false
-		table.insert(snake_tail, 1, snake_part)
+		table.insert(snake_body, 1, snake_part)
 	else
-		if #snake_tail == 0 then
+		if #snake_body == 0 then
 			return
 		end
-		table.insert(snake_tail, 1, snake_part)
-		table.remove(snake_tail)
+		table.insert(snake_body, 1, snake_part)
+		table.remove(snake_body)
 	end
-end --move_tail
+end --move_body
 
 function spawn_fruit()
 	-- Generate random position for fruit
@@ -185,15 +232,8 @@ end
 
 function check_fruit()
 	if snake_head.x_pos == fruit.x_pos and snake_head.y_pos == fruit.y_pos then
-		-- Snake ate the fruit, spawn a new one
 		SCORE = SCORE + 1
-		-- Add a new body part to the snake_tail
-		local snake_part = {
-			x_pos = snake_head.x_pos,
-			y_pos = snake_head.y_pos
-		}
-		table.insert(snake_tail, 1, snake_part)
-		-- Spawn a new fruit
+		NEW_FRUIT = true
 		spawn_fruit()
 	end
 end
@@ -213,9 +253,11 @@ end --check_endgame
 
 -- <SPRITES>
 -- 000:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
--- 001:ffffffffff6666fff655556f655c55566555c556f655556fff6666ffffffffff
--- 002:ffffffffff6666fff655556f6555555665555556f655556fff6666ffffffffff
--- 003:ffff65fffff6fffff222222f222222222222222222222222f222222fff2222ff
+-- 001:ffffffff666666ff5555756f55555556555555225555756f666666ffffffffff
+-- 002:ffffffffff666666f65555556555555565555555f6555555ff666666ffffffff
+-- 003:ffffffff666666665555555555555555555555555555555566666666ffffffff
+-- 004:ffffffffffff6666fff65555ff655555f6555555f6555555f6555566f655556f
+-- 016:ffff65fffff6fffff222222f222222222222222222222222f222222fff2222ff
 -- 064:0000000c0000000cc00000000c00000000c0000c0c0ccc0c0cccc0ccccccc0c0
 -- 065:c0000cc00cccc0c0c0cc0c00c0cc0c00ccccccc0c0000ccc0cccc0ccc0cc0c0c
 -- 066:0000000c0000000c000000000c00000000c0000c0c0ccc0c0cccc0ccccccc0c0
@@ -248,6 +290,10 @@ end --check_endgame
 -- 101:00c000c000ccccc00ccccccc0cc0c0cc00ccccc000ccccc0cccccccccccccccc
 -- 102:0000000000000000000c0000000c0000000c0000000c000000c0000c0c0000cc
 -- 103:00c000c000ccccc00ccccccc0cc0c0cc00ccccc000ccccc0cccccccccccccccc
+-- 104:00000000000000000000000000c000000c0c0000c0cc00000ccc0000c0cccccc
+-- 105:0c0c0c0000cccc0c00c0c0c000ccc0c0000ccc0c0cccc000ccccc000cc00c000
+-- 106:00000000000000000000000000c000000c0c0000c0cc00000ccc0000c0cccccc
+-- 107:0c0c0c0000cccc0000c0c0c000ccc0cc000ccc000cccc000ccccc000cc00c000
 -- 112:ccccccccc0ccccccc0cccccc0cccc0000cc00ccc0c0c0c0c0c0c000000000000
 -- 113:0c0cccccc0000000cccc00c00cc00000c0c0000000ccccc000c000c000000000
 -- 114:ccccccccc0ccccccc0cccccc0cccc0000cc00ccc0c0c0c0c0c0c000000000000
@@ -256,6 +302,10 @@ end --check_endgame
 -- 117:ccccccccccccccc0ccccccc0ccccccc0ccccccc0cccc0cc00ccc0cc0c0ccc0cc
 -- 118:0c000ccc0c00cccccc0cccccc00cccccc0ccccc0c0ccccc00c0cccc000cccccc
 -- 119:ccccccccccccccc0ccccccc0ccccccc0ccccccc0cccc0cc00ccc0cc0c0ccc0cc
+-- 120:0ccc0cccc0ccc0cc0ccc0ccc0cccc0cc00cc0c00000ccccc0000c00c00000c00
+-- 121:cccc0c00cccc0c00ccc0c000cc0c000000c00000cc00000000000000c0000000
+-- 122:0ccc0cccc0ccc0cc0ccc0ccc0cccc0cc00cc0c00000ccccc0000c00c00000c00
+-- 123:cccc0c00cccc0c00ccc0c000cc0c000000c00000cc00000000000000c0000000
 -- </SPRITES>
 
 -- <WAVES>
